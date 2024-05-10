@@ -16,9 +16,9 @@ namespace ChartsServer.Subscription
     {
         IConfiguration _configuration;
         IHubContext<SalesHub> _hubContext;
-        
 
-        public DatabaseSubscription(IConfiguration configuration,IHubContext<SalesHub> hubContext)
+
+        public DatabaseSubscription(IConfiguration configuration, IHubContext<SalesHub> hubContext)
         {
             _configuration = configuration;
             _hubContext = hubContext;
@@ -31,14 +31,15 @@ namespace ChartsServer.Subscription
             _tableDependency.OnChanged += async (o, e) =>
             {
                 SalesDbContext context = new();
-                var data = (from Employee in context.Employees
-                            join Sale in context.Sales
-                            on Employee.Id equals Sale.EmployeeId
-                            select new{
+                var data = (from Sale in context.Sales
+                            join Employee in context.Employees
+                            on Sale.EmployeeId equals Employee.Id
+                            select new
+                            {
                                 Employee,
                                 Sale
-                            }).ToList();
-             
+                            }).ToArray();
+
                 List<object> datas = new List<object>();
                 var employeeNames = data.Select(d => d.Employee.Name).Distinct().ToList();
                 employeeNames.ForEach(e =>
@@ -48,7 +49,7 @@ namespace ChartsServer.Subscription
                         name = e,
                         data = data.Where(s => s.Employee.Name == e).Select(s => s.Sale.Price).ToList()
                     });
-            });
+                });
                 await _hubContext.Clients.All.SendAsync("receiveMessage", datas);
             };
             _tableDependency.OnError += (o, e) => { };

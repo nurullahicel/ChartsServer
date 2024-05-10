@@ -2,11 +2,11 @@
 
 namespace ChartsServer.Hubs
 {
-    public class SalesHub:Hub
+    public class SalesHub : Hub
     {
         public async Task SendMessageAsync()
         {
-            
+            await Clients.All.SendAsync("receiveMessage", "alert");
         }
     }
 }
